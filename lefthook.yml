@@ -1,0 +1,19 @@
+# Lefthook — single-binary git hooks (replaces husky + lint-staged).
+# https://lefthook.dev
+pre-commit:
+  # Sequential (not parallel) so eslint --fix and prettier --write never write
+  # the same file concurrently.
+  commands:
+    eslint:
+      glob: '*.{js,jsx,ts,tsx,mjs}'
+      run: pnpm eslint --fix {staged_files}
+      stage_fixed: true
+    prettier:
+      glob: '*.{js,jsx,ts,tsx,mjs,json,css,md,html,yml,yaml}'
+      run: pnpm prettier --write {staged_files}
+      stage_fixed: true
+
+commit-msg:
+  commands:
+    commitlint:
+      run: pnpm commitlint --edit {1}
