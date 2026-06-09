@@ -22,7 +22,7 @@ import { Button } from 'shared/ui';
  * features. Composing two features belongs in a widget, not a sideways
  * feature→feature import. Hydrates from the dashboard's SSR prefetch.
  */
-export function ProductsBoard({ userId }: { userId: number }) {
+export function ProductsBoard() {
   const router = useRouter();
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useInfiniteQuery({
@@ -61,7 +61,7 @@ export function ProductsBoard({ userId }: { userId: number }) {
               ${product.price.toFixed(2)}
             </span>
             <div className="mt-auto pt-3">
-              <AddToCartButton productId={product.id} userId={userId} />
+              <AddToCartButton productId={product.id} />
             </div>
           </li>
         ))}

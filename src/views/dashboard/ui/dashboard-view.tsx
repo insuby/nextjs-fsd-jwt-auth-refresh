@@ -78,7 +78,7 @@ export async function DashboardView() {
 
       <h2 className="mb-4 font-medium">Products</h2>
       <HydrationBoundary state={dehydrate(queryClient)}>
-        <ProductsBoard userId={user.id} />
+        <ProductsBoard />
       </HydrationBoundary>
     </main>
   );

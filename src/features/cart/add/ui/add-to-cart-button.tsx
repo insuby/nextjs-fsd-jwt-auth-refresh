@@ -10,16 +10,10 @@ import { Button } from 'shared/ui';
 
 import { addToCartAction } from '../api/add-to-cart-action';
 
-export function AddToCartButton({
-  productId,
-  userId,
-}: {
-  productId: number;
-  userId: number;
-}) {
+export function AddToCartButton({ productId }: { productId: number }) {
   const router = useRouter();
   const { mutate, isPending } = useMutation({
-    mutationFn: () => addToCartAction({ productId, userId }),
+    mutationFn: () => addToCartAction({ productId }),
     onSuccess: (result) => {
       if (result.ok) {
         const { total, totalQuantity, products } = result.cart;
