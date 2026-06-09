@@ -11,7 +11,7 @@ React Query, Zod, typed env, Vitest + Playwright, and Lefthook git hooks.
 
 | Area          | Choice                                                               |
 | ------------- | -------------------------------------------------------------------- |
-| Framework     | `next` 15 (App Router, React Compiler)                               |
+| Framework     | `next` 16 (App Router, React Compiler)                               |
 | UI / Language | `react` 19 · `typescript` (strict)                                   |
 | Architecture  | [`feature-sliced`](https://feature-sliced.design/) (`pages`→`views`) |
 | Data          | RSC `fetch` + Server Actions + `@tanstack/react-query`               |
