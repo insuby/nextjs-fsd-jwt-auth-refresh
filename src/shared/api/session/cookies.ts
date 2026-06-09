@@ -6,9 +6,18 @@ import type { Tokens } from './refresh';
 export const ACCESS_TOKEN_COOKIE = 'access_token';
 export const REFRESH_TOKEN_COOKIE = 'refresh_token';
 
+// Secure cookies are required in production (HTTPS) but break auth when the app
+// is served over plain HTTP (e.g. a staging box reached by IP) — the browser
+// won't send Secure cookies over http. Default to secure in prod, but allow an
+// explicit `COOKIE_SECURE=false` opt-out for HTTP-only deployments.
+const SECURE_COOKIES =
+  process.env.COOKIE_SECURE === 'false'
+    ? false
+    : process.env.NODE_ENV === 'production';
+
 const COOKIE_OPTIONS = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
+  secure: SECURE_COOKIES,
   sameSite: 'lax',
   path: '/',
   maxAge: 60 * 60 * 24 * 30, // 30 days (storage lifetime; JWT exp is separate)
