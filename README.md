@@ -3,7 +3,7 @@
 
 # Next.js 15 + FSD Starter
 
-Lean, opinionated starter on **Next.js 15 (App Router)**, **React 19**,
+Lean, opinionated starter on **Next.js 16 (App Router)**, **React 19**,
 **TypeScript**, **Feature-Sliced Design** and **Tailwind v4** — RSC-first, with
 React Query, Zod, typed env, Vitest + Playwright, and Lefthook git hooks.
 
