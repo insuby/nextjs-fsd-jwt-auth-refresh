@@ -2,8 +2,17 @@ import nextCoreWebVitals from 'eslint-config-next/core-web-vitals';
 import prettier from 'eslint-config-prettier/flat';
 import boundaries from 'eslint-plugin-boundaries';
 
-// eslint-plugin-boundaries v6: an `allow` target is `{ to: { type } }`.
-const to = (...types) => types.map((type) => ({ to: { type } }));
+// eslint-plugin-boundaries v6: a dependency target is `{ to: { type, internalPath } }`.
+// `internalPath` enforces each slice's public API — a cross-slice import must hit the
+// barrel (index) or the RSC-only server entry; intra-slice imports are INTERNAL and
+// skipped by the rule. shared is segment-structured, so its entries are flat; the
+// other layers allow a nested index (grouped slices, e.g. features/auth/login).
+const SHARED_ENTRY = ['index.ts', 'server.ts', 'env.ts'];
+const SLICE_ENTRY = ['**/index.ts', '**/server.ts'];
+const to = (...types) =>
+  types.map((type) => ({
+    to: { type, internalPath: type === 'shared' ? SHARED_ENTRY : SLICE_ENTRY },
+  }));
 
 const eslintConfig = [
   // eslint-config-next 16 ships a native flat config array (base + core-web-vitals,
@@ -33,33 +42,44 @@ const eslintConfig = [
         node: true,
       },
       'boundaries/include': ['src/**/*'],
+      // `mode: 'folder'` so every file in a slice shares one elementPath — that
+      // makes intra-slice imports INTERNAL (which `boundaries/dependencies` skips
+      // by default), while cross-slice imports still resolve to the slice and hit
+      // the `internalPath` entry-point check above. shared is captured per-segment
+      // (api/config/ui) so each segment's barrel is its public entry. Layer-direction
+      // matching is by `type`, unaffected.
       'boundaries/elements': [
-        { mode: 'full', type: 'app', pattern: 'src/app/**/*' },
+        { mode: 'folder', type: 'app', pattern: 'src/app' },
         {
-          mode: 'full',
+          mode: 'folder',
           type: 'views',
-          pattern: 'src/views/*/**/*',
+          pattern: 'src/views/*',
           capture: ['view'],
         },
         {
-          mode: 'full',
+          mode: 'folder',
           type: 'widgets',
-          pattern: 'src/widgets/*/**/*',
+          pattern: 'src/widgets/*',
           capture: ['widget'],
         },
         {
-          mode: 'full',
+          mode: 'folder',
           type: 'features',
-          pattern: 'src/features/*/**/*',
+          pattern: 'src/features/*',
           capture: ['feature'],
         },
         {
-          mode: 'full',
+          mode: 'folder',
           type: 'entities',
-          pattern: 'src/entities/*/**/*',
+          pattern: 'src/entities/*',
           capture: ['entity'],
         },
-        { mode: 'full', type: 'shared', pattern: 'src/shared/**/*' },
+        {
+          mode: 'folder',
+          type: 'shared',
+          pattern: 'src/shared/*',
+          capture: ['segment'],
+        },
       ],
     },
     rules: {
