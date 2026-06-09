@@ -22,8 +22,15 @@ export function AddToCartButton({
     mutationFn: () => addToCartAction({ productId, userId }),
     onSuccess: (result) => {
       if (result.ok) {
-        toast.success(`Added to cart (cart #${result.cart.id}).`);
-        router.refresh();
+        const { total, totalQuantity, products } = result.cart;
+        // No router.refresh() here: it would re-run the dashboard SSR, which
+        // re-prefetches only the FIRST products page and re-hydrates over the
+        // client infinite query — collapsing the loaded list back to 5. DummyJSON
+        // is also stateless (the add is never persisted), so a refresh wouldn't
+        // change the "Your carts" summary anyway — we surface the result here.
+        toast.success(
+          `Added to cart — ${totalQuantity ?? products.length} item(s), $${total.toFixed(2)}`,
+        );
         return;
       }
       toast.error(result.message);
