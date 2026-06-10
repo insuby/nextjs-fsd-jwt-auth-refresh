@@ -8,16 +8,26 @@ export type RefreshState = {
 };
 
 /**
- * Request-scoped refresh state. React's `cache()` returns the SAME object for
- * every call within one server request, and a FRESH one per request. That gives:
- *   - single-flight WITHIN a request (parallel 401s share one refresh), and
- *   - full isolation ACROSS requests/sessions (no shared state to leak),
- * with NO module-global — the rule the repo enforces for `getQueryClient()`.
+ * Request-scoped refresh state, via React's `cache()`.
  *
- * `tokens` is kept for the whole request once a refresh succeeds, so EVERY later
- * call in the same render reuses that result instead of re-reading the (now stale)
- * cookie and triggering a second refresh — i.e. exactly one refresh per request,
- * correct even against backends that rotate/invalidate refresh tokens.
+ * IMPORTANT: `cache()` only memoizes during an RSC RENDER pass. React returns the
+ * SAME object for every call within one render (and a fresh one per render), but
+ * OUTSIDE a render it has no request scope and simply calls through — a FRESH
+ * object every call (react 19's `cache` no-ops when the cache dispatcher is
+ * absent, which it is in Server Actions / Route Handlers). So:
+ *   - In an RSC render: true single-flight — parallel 401s share one refresh, and
+ *     the cached `tokens` make every later call in the render reuse that result
+ *     rather than re-reading the (stale) cookie and refreshing again. Holds even
+ *     against backends that rotate/invalidate refresh tokens.
+ *   - In a Server Action: there is NO render scope, so this does not dedupe across
+ *     calls. That's fine for the current code paths — actions make SEQUENTIAL
+ *     authed calls and persist the refreshed pair to cookies (a Server Action can
+ *     write them), so the next `serverFetch` re-reads the fresh access token
+ *     instead of refreshing again. The case to watch is PARALLEL authed calls in
+ *     one action against a rotating-token backend (none exist today).
+ *
+ * Either way there is NO module-global, so nothing leaks across requests/sessions
+ * — the same rule the repo enforces for `getQueryClient()`.
  */
 export const getRefreshState = cache(
   (): RefreshState => ({
