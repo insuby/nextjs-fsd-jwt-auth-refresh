@@ -31,19 +31,19 @@ export async function DashboardView() {
   let user;
   let carts;
   try {
+    // Products don't depend on the user — kick the prefetch off first so it
+    // overlaps the getMe → getUserCarts chain instead of waiting behind it.
+    // Prefetches into the same key the client island uses, so its
+    // useInfiniteQuery hydrates and "Load more" continues seamlessly.
+    const productsPrefetch = queryClient.prefetchInfiniteQuery({
+      queryKey: productKeys.infinite(PRODUCTS_PAGE_SIZE),
+      queryFn: ({ pageParam }) =>
+        getProducts({ limit: PRODUCTS_PAGE_SIZE, skip: pageParam }),
+      initialPageParam: 0,
+      getNextPageParam: getNextProductsPageParam,
+    });
     user = await getMe();
-    [carts] = await Promise.all([
-      getUserCarts(user.id),
-      // Prefetch the first products page into the same key the client island uses,
-      // so its useInfiniteQuery hydrates and "Load more" continues seamlessly.
-      queryClient.prefetchInfiniteQuery({
-        queryKey: productKeys.infinite(PRODUCTS_PAGE_SIZE),
-        queryFn: ({ pageParam }) =>
-          getProducts({ limit: PRODUCTS_PAGE_SIZE, skip: pageParam }),
-        initialPageParam: 0,
-        getNextPageParam: getNextProductsPageParam,
-      }),
-    ]);
+    [carts] = await Promise.all([getUserCarts(user.id), productsPrefetch]);
   } catch (error) {
     // Unrecoverable session (refresh failed) → log out.
     if (error instanceof SessionExpiredError) redirect(RoutesPath.LOGIN);
