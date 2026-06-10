@@ -1,8 +1,7 @@
 import { z } from 'zod';
 
+import { apiFetch } from 'shared/api';
 import { env } from 'shared/config/env';
-
-import { apiFetch } from '../api-client';
 
 /**
  * Slim token pair — domain-agnostic plumbing that stays in `shared` so the
