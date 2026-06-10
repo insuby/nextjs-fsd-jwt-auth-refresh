@@ -28,9 +28,9 @@ export default function DashboardError({
     });
 
   return (
-    <main className="mx-auto flex max-w-md flex-col items-center gap-4 p-10 text-center">
-      <h1 className="text-lg font-semibold">Something went wrong</h1>
-      <p className="text-sm text-gray-500">
+    <main className="mx-auto flex min-h-[60vh] max-w-md flex-col items-center justify-center gap-4 p-10 text-center">
+      <h1 className="text-lg font-semibold text-ink">Something went wrong</h1>
+      <p className="text-sm text-muted">
         We couldn’t load your dashboard. Please try again.
       </p>
       <Button onClick={retry} isLoading={isPending}>

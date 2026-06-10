@@ -1,5 +1,41 @@
 @import 'tailwindcss';
 
+/* Design tokens — "considered apothecary": one confident vermilion pigment on
+   clinical white, near-black ink, quiet precise type. OKLCH throughout. */
+@theme {
+  --color-bg: oklch(1 0 0);
+  --color-surface: oklch(0.984 0.0025 255);
+  --color-ink: oklch(0.24 0.01 260);
+  --color-ink-hover: oklch(0.33 0.012 260);
+  --color-muted: oklch(0.46 0.012 260);
+  --color-faint: oklch(0.6 0.01 260);
+  --color-line: oklch(0.921 0.004 260);
+  --color-line-strong: oklch(0.86 0.007 260);
+
+  /* Calm slate accent — used sparingly (mark, avatar, focus), never loud. */
+  --color-brand: oklch(0.55 0.072 252);
+  --color-brand-deep: oklch(0.4 0.085 255);
+  --color-brand-deep-hover: oklch(0.34 0.082 255);
+  --color-brand-text: oklch(0.46 0.08 255);
+  --color-brand-weak: oklch(0.966 0.013 252);
+  --color-on-brand: oklch(0.99 0.004 255);
+
+  --color-success: oklch(0.55 0.1 150);
+  --color-danger: oklch(0.52 0.15 25);
+
+  --radius-field: 0.625rem;
+  --radius-card: 0.875rem;
+  --radius-pill: 999px;
+
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica,
+    Arial, sans-serif;
+
+  --shadow-card:
+    0 1px 2px oklch(0.22 0.01 40 / 0.04),
+    0 14px 32px -18px oklch(0.22 0.01 40 / 0.22);
+}
+
 :root {
   color-scheme: light;
 }
@@ -7,4 +43,73 @@
 html,
 body {
   height: 100%;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--color-brand);
+  color: var(--color-on-brand);
+}
+
+/* Toasts (react-toastify) repainted with the design tokens. Scoped to
+   `.Toastify` so it wins over the library's own `:root` variables regardless
+   of injection order. theme="light" → white toast, ink text, accent details. */
+.Toastify {
+  --toastify-font-family: var(--font-sans);
+  --toastify-toast-bd-radius: 0.75rem;
+  --toastify-toast-shadow: var(--shadow-card);
+  --toastify-color-light: var(--color-bg);
+  --toastify-text-color-light: var(--color-ink);
+}
+
+/* Icon + progress read dedicated vars react-toastify sets on the toast element
+   itself, so the container scope can't reach them — override the elements
+   directly. Success/info → theme accent, error → danger. */
+.Toastify .Toastify__toast--success .Toastify__toast-icon svg,
+.Toastify .Toastify__toast--info .Toastify__toast-icon svg {
+  fill: var(--color-brand);
+}
+.Toastify .Toastify__toast--error .Toastify__toast-icon svg {
+  fill: var(--color-danger);
+}
+.Toastify .Toastify__progress-bar--success,
+.Toastify .Toastify__progress-bar--info {
+  background: var(--color-brand);
+}
+.Toastify .Toastify__progress-bar--error {
+  background: var(--color-danger);
+}
+
+/* One signature entrance — gated to motion-allowed environments. */
+@keyframes ip-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.ip-rise {
+  animation: ip-rise 0.62s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }

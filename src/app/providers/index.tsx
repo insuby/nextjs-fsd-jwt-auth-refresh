@@ -14,8 +14,9 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       {children}
-      {/* react-toastify v11 injects its own CSS — no stylesheet import needed. */}
-      <ToastContainer closeOnClick theme="colored" />
+      {/* react-toastify v11 injects its own CSS — no stylesheet import needed.
+          Recolored to the design tokens via `--toastify-*` vars in globals.css. */}
+      <ToastContainer closeOnClick theme="light" position="bottom-right" />
     </QueryClientProvider>
   );
 }

@@ -82,19 +82,47 @@ export function ProductsBoard() {
 
   const products = data?.pages.flatMap((page) => page.products) ?? [];
 
+  if (products.length === 0) {
+    return (
+      <div className="rounded-card border border-dashed border-line-strong bg-surface px-6 py-16 text-center">
+        <p className="text-sm font-medium text-ink">No products to show yet</p>
+        <p className="mt-1 text-sm text-muted">
+          They’ll appear here as soon as the catalog loads.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <section>
-      <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <ul className="grid grid-cols-[repeat(auto-fill,minmax(15rem,1fr))] gap-4">
         {products.map((product) => (
           <li
             key={product.id}
-            className="flex flex-col rounded-lg border border-gray-200 p-4 transition-shadow hover:shadow-sm"
+            className="group flex flex-col rounded-card border border-line bg-surface p-5 transition-[transform,box-shadow,border-color] duration-150 ease-out hover:-translate-y-0.5 hover:border-line-strong hover:shadow-card"
           >
-            <span className="font-medium">{product.title}</span>
-            <span className="text-sm text-gray-500">
+            <div className="flex items-start justify-between gap-3">
+              <h3 className="leading-snug font-medium text-ink">
+                {product.title}
+              </h3>
+              {product.rating != null && (
+                <span className="shrink-0 text-xs text-muted tabular-nums">
+                  ★ {product.rating.toFixed(1)}
+                </span>
+              )}
+            </div>
+
+            {product.category && (
+              <span className="mt-2 inline-flex w-fit rounded-pill border border-line bg-bg px-2.5 py-0.5 text-xs font-medium text-muted capitalize">
+                {product.category}
+              </span>
+            )}
+
+            <span className="mt-4 text-xl font-semibold text-ink tabular-nums">
               ${product.price.toFixed(2)}
             </span>
-            <div className="mt-auto pt-3">
+
+            <div className="mt-auto pt-5">
               <AddToCartButton productId={product.id} />
             </div>
           </li>
@@ -102,13 +130,13 @@ export function ProductsBoard() {
       </ul>
 
       {hasNextPage && (
-        <div className="mt-6 flex justify-center">
+        <div className="mt-8 flex justify-center">
           <Button
             variant="secondary"
             isLoading={isFetchingNextPage}
             onClick={() => fetchNextPage()}
           >
-            Load more
+            {isFetchingNextPage ? 'Loading…' : 'Load more products'}
           </Button>
         </div>
       )}

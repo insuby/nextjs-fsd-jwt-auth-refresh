@@ -38,11 +38,13 @@ export function AddToCartButton({ productId }: { productId: number }) {
 
   return (
     <Button
+      variant="secondary"
+      size="sm"
       onClick={() => mutate()}
       isLoading={isPending}
-      className="w-full px-3 py-1.5"
+      className="w-full"
     >
-      Add to cart
+      {isPending ? 'Adding…' : 'Add to cart'}
     </Button>
   );
 }
