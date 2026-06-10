@@ -20,16 +20,20 @@ Next's file-system router collides with FSD's `app`/`pages` layers, so:
 ```
 app/                    # Next App Router (ROUTING ONLY)
 ├── layout.tsx          # imports Providers + globals.css from the FSD app layer
-├── page.tsx            # redirect('/main')
+├── page.tsx            # redirect('/login') | '/dashboard' (by session)
 ├── globals.css         # Tailwind v4 entry
-└── main/page.tsx       # export { MainView as default, metadata } from '@/views/main'
+├── login/page.tsx      # export { LoginView as default, metadata } from '@/views/login'
+└── dashboard/
+    ├── page.tsx        # export { DashboardView as default, metadata } from '@/views/dashboard'
+    └── error.tsx       # 'use client' error boundary for the dashboard segment
+proxy.ts                # Next 16 middleware (refresh-gate + session routing), at ROOT
 src/
 ├── app/                # FSD app layer: providers (QueryClient, Toaster)
-├── views/              # FSD "pages" layer (route screens), renamed
-├── widgets/            # composite UI blocks (scaffold)
-├── features/           # user-facing features (scaffold)
-├── entities/           # business entities (scaffold)
-└── shared/             # api (fetch + query client), config (env, routes), ui
+├── views/              # FSD "pages" layer (login, dashboard), renamed
+├── widgets/            # composite UI blocks (products-board)
+├── features/           # user-facing features (auth, cart/add, product/load)
+├── entities/           # business entities (user, product, cart)
+└── shared/             # api (auth transport + refresh + query client), config, ui
 ```
 
 **Layer rule:** import only from layers **below** (`views → widgets → features →

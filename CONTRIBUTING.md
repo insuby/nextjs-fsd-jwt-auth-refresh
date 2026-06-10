@@ -1,6 +1,6 @@
 # Contributing
 
-This project follows **Feature-Sliced Design** on **Next.js 15** with a small set
+This project follows **Feature-Sliced Design** on **Next.js 16** with a small set
 of automated quality gates.
 
 ## Setup
