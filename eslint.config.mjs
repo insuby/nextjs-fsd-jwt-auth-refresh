@@ -34,14 +34,16 @@ const eslintConfig = [
   // --- FSD layer boundaries (import direction enforcement) ---
   // A file may import only from layers strictly below it.
   {
-    files: ['src/**/*.{ts,tsx}'],
+    files: ['src/**/*.{ts,tsx}', 'app/**/*.{ts,tsx}', 'proxy.ts'],
     plugins: { boundaries },
     settings: {
       'import/resolver': {
         typescript: { alwaysTryTypes: true },
         node: true,
       },
-      'boundaries/include': ['src/**/*'],
+      // Include the root routing shell (app/) and proxy.ts too, so they're held
+      // to the same public-API rules — not just src/.
+      'boundaries/include': ['src/**/*', 'app/**/*.{ts,tsx}', 'proxy.ts'],
       // `mode: 'folder'` so every file in a slice shares one elementPath — that
       // makes intra-slice imports INTERNAL (which `boundaries/dependencies` skips
       // by default), while cross-slice imports still resolve to the slice and hit
@@ -49,6 +51,14 @@ const eslintConfig = [
       // (api/config/ui) so each segment's barrel is its public entry. Layer-direction
       // matching is by `type`, unaffected.
       'boundaries/elements': [
+        // Root routing shell: Next's app/ + proxy.ts. Sits above the FSD layers
+        // (re-exports views, mounts providers, gates sessions) and may import any
+        // layer — subject to the same public-API (internalPath) checks below.
+        {
+          mode: 'full',
+          type: 'root',
+          pattern: ['app/**/*.{ts,tsx}', 'proxy.ts'],
+        },
         { mode: 'folder', type: 'app', pattern: 'src/app' },
         {
           mode: 'folder',
@@ -61,6 +71,16 @@ const eslintConfig = [
           type: 'widgets',
           pattern: 'src/widgets/*',
           capture: ['widget'],
+        },
+        // Grouped feature slices (features/<group>/<slice>) must each be their OWN
+        // element — the more specific `*/*` pattern is listed first so sibling
+        // slices in a group (e.g. auth/login vs auth/logout) don't collapse into
+        // one element and let deep imports bypass each other's public API.
+        {
+          mode: 'folder',
+          type: 'features',
+          pattern: 'src/features/*/*',
+          capture: ['group', 'feature'],
         },
         {
           mode: 'folder',
@@ -87,9 +107,12 @@ const eslintConfig = [
         'error',
         {
           default: 'disallow',
+          // A layer may import only from layers strictly BELOW it — never from a
+          // sibling slice on the same layer (so the self-type is intentionally
+          // absent from every allow-list except `shared`, whose segments compose).
           rules: [
             {
-              from: [{ type: 'app' }],
+              from: [{ type: 'root' }],
               allow: to(
                 'app',
                 'views',
@@ -100,18 +123,22 @@ const eslintConfig = [
               ),
             },
             {
-              from: [{ type: 'views' }],
+              from: [{ type: 'app' }],
               allow: to('views', 'widgets', 'features', 'entities', 'shared'),
             },
             {
-              from: [{ type: 'widgets' }],
+              from: [{ type: 'views' }],
               allow: to('widgets', 'features', 'entities', 'shared'),
             },
             {
-              from: [{ type: 'features' }],
+              from: [{ type: 'widgets' }],
               allow: to('features', 'entities', 'shared'),
             },
-            { from: [{ type: 'entities' }], allow: to('entities', 'shared') },
+            {
+              from: [{ type: 'features' }],
+              allow: to('entities', 'shared'),
+            },
+            { from: [{ type: 'entities' }], allow: to('shared') },
             { from: [{ type: 'shared' }], allow: to('shared') },
           ],
         },
