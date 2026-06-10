@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes } from 'react';
+import type { ButtonHTMLAttributes, ReactNode } from 'react';
 
 import { Spinner } from './spinner';
 
@@ -24,18 +24,22 @@ const SIZES: Record<Size, string> = {
 };
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
-  /** Show a spinner and disable the button while an async action runs. */
+  /** Leading icon — swapped for a spinner while loading (fixed-size slot). */
+  icon?: ReactNode;
+  /** Show a spinner in the icon slot and disable the button while loading. */
   isLoading?: boolean;
   variant?: Variant;
   size?: Size;
 };
 
 /**
- * Shared button primitive with a built-in loading state (spinner + disabled).
- * The label stays put while loading so the layout doesn't jump.
+ * Shared button primitive with a built-in loading state.
+ * When `icon` is set, it swaps to a spinner in a fixed slot so the label
+ * and surrounding layout never jump.
  */
 export function Button({
   children,
+  icon,
   isLoading = false,
   variant = 'primary',
   size = 'md',
@@ -52,7 +56,14 @@ export function Button({
       aria-busy={isLoading}
       className={`${BASE} ${VARIANTS[variant]} ${SIZES[size]} ${className}`}
     >
-      {isLoading && <Spinner />}
+      {(icon || isLoading) && (
+        <span
+          className="grid size-4 shrink-0 place-items-center"
+          aria-hidden="true"
+        >
+          {isLoading ? <Spinner /> : icon}
+        </span>
+      )}
       {children}
     </button>
   );

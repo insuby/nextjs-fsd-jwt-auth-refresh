@@ -6,7 +6,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useTransition } from 'react';
 
 import { RoutesPath } from 'shared/config';
-import { Button } from 'shared/ui';
+import { Button, LogOutIcon } from 'shared/ui';
 
 import { logoutAction } from '../api/logout-action';
 
@@ -29,6 +29,7 @@ export function LogoutButton() {
       size="sm"
       onClick={onLogout}
       isLoading={isPending}
+      icon={<LogOutIcon />}
     >
       Log out
     </Button>

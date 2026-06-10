@@ -87,22 +87,6 @@ body {
   background: var(--color-danger);
 }
 
-/* One signature entrance — gated to motion-allowed environments. */
-@keyframes ip-rise {
-  from {
-    opacity: 0;
-    transform: translateY(14px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-.ip-rise {
-  animation: ip-rise 0.62s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

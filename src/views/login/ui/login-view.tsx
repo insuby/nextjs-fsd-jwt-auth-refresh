@@ -71,7 +71,7 @@ export function LoginView() {
 
       {/* Form panel. */}
       <section className="flex items-center justify-center bg-bg px-6 py-12 sm:px-10">
-        <div className="ip-rise w-full max-w-sm">
+        <div className="w-full max-w-sm">
           <div className="mb-10 lg:hidden">
             <Wordmark />
           </div>

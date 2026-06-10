@@ -8,7 +8,7 @@ import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
 
 import { RoutesPath } from 'shared/config';
-import { Button } from 'shared/ui';
+import { Button, LogInIcon } from 'shared/ui';
 
 import { loginAction } from '../api/login-action';
 import { type LoginInput, loginSchema } from '../model/login-schema';
@@ -114,8 +114,13 @@ export function LoginForm() {
         )}
       </label>
 
-      <Button type="submit" isLoading={isPending} className="mt-1 w-full">
-        {isPending ? 'Signing in…' : 'Sign in'}
+      <Button
+        type="submit"
+        isLoading={isPending}
+        icon={<LogInIcon />}
+        className="mt-1 w-full"
+      >
+        Sign in
       </Button>
     </form>
   );
