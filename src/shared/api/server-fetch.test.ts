@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { afterEach, expect, test, vi } from 'vitest';
 
+import { ApiError } from './api-client';
 import { SessionExpiredError } from './errors';
 import { serverFetch } from './server-fetch';
 import { readTokens, setTokens } from './session/cookies';
@@ -84,12 +85,32 @@ test('401 with no refresh token → SessionExpiredError, no refresh attempted', 
   expect(mockRefreshOnce).not.toHaveBeenCalled();
 });
 
-test('a failed refresh → SessionExpiredError', async () => {
+test('refresh rejected with an auth error (401) → SessionExpiredError', async () => {
   mockReadTokens.mockResolvedValue({ accessToken: 'stale', refreshToken: 'r' });
-  mockRefreshOnce.mockRejectedValue(new Error('refresh boom'));
+  mockRefreshOnce.mockRejectedValue(new ApiError(401, 'Unauthorized'));
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({}, 401)));
 
   await expect(serverFetch('/auth/me')).rejects.toBeInstanceOf(
+    SessionExpiredError,
+  );
+});
+
+test('transient refresh failure (5xx/network) is propagated as-is, NOT SessionExpiredError', async () => {
+  mockReadTokens.mockResolvedValue({ accessToken: 'stale', refreshToken: 'r' });
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({}, 401)));
+
+  // Upstream 5xx on /auth/refresh → must not destroy a still-valid session.
+  mockRefreshOnce.mockRejectedValueOnce(
+    new ApiError(503, 'Service Unavailable'),
+  );
+  await expect(serverFetch('/auth/me')).rejects.toMatchObject({
+    name: 'ApiError',
+    status: 503,
+  });
+
+  // Network blip (plain Error) → likewise propagated, not swallowed.
+  mockRefreshOnce.mockRejectedValueOnce(new Error('network boom'));
+  await expect(serverFetch('/auth/me')).rejects.not.toBeInstanceOf(
     SessionExpiredError,
   );
 });

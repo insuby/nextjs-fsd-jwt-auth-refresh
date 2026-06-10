@@ -1,6 +1,8 @@
 import { cookies } from 'next/headers';
 import type { NextResponse } from 'next/server';
 
+import { env } from 'shared/config/env';
+
 import type { Tokens } from './refresh';
 
 export const ACCESS_TOKEN_COOKIE = 'access_token';
@@ -8,12 +10,10 @@ export const REFRESH_TOKEN_COOKIE = 'refresh_token';
 
 // Secure cookies are required in production (HTTPS) but break auth when the app
 // is served over plain HTTP (e.g. a staging box reached by IP) — the browser
-// won't send Secure cookies over http. Default to secure in prod, but allow an
-// explicit `COOKIE_SECURE=false` opt-out for HTTP-only deployments.
+// won't send Secure cookies over http. Honour the typed, validated
+// `COOKIE_SECURE` override when set; otherwise default to secure in production.
 const SECURE_COOKIES =
-  process.env.COOKIE_SECURE === 'false'
-    ? false
-    : process.env.NODE_ENV === 'production';
+  env.COOKIE_SECURE ?? process.env.NODE_ENV === 'production';
 
 const COOKIE_OPTIONS = {
   httpOnly: true,

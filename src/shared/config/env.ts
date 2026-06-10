@@ -16,6 +16,11 @@ export const env = createEnv({
     // Refresh proactively when the access token has fewer than this many seconds
     // of life left (clock-skew / in-flight margin for the proxy refresh-gate).
     REFRESH_SKEW_SECONDS: z.coerce.number().int().nonnegative().default(30),
+    // Explicit override for the Secure cookie flag. Secure cookies are required
+    // in production (HTTPS) but break auth on plain-HTTP deployments (a staging
+    // box reached by IP) — set `COOKIE_SECURE=false` there. When unset, defaults
+    // to NODE_ENV === 'production'. `z.stringbool` accepts true/false/1/0/yes/no.
+    COOKIE_SECURE: z.stringbool().optional(),
   },
   client: {
     // The app's OWN origin (used by the public `apiFetch` default base). NOT the
@@ -26,6 +31,7 @@ export const env = createEnv({
     API_BASE_URL: process.env.API_BASE_URL,
     ACCESS_TOKEN_TTL_MINUTES: process.env.ACCESS_TOKEN_TTL_MINUTES,
     REFRESH_SKEW_SECONDS: process.env.REFRESH_SKEW_SECONDS,
+    COOKIE_SECURE: process.env.COOKIE_SECURE,
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
   },
   emptyStringAsUndefined: true,

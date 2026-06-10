@@ -25,8 +25,9 @@ function withAuth(
 /**
  * Authenticated server-side transport against `env.API_BASE_URL`. Attaches the
  * access token from cookies; on a 401 it performs a single-flight refresh + ONE
- * transparent retry. Throws `SessionExpiredError` when the session can't be
- * recovered (caller → logout).
+ * transparent retry. Throws `SessionExpiredError` only on a DEFINITIVE auth
+ * rejection (caller → logout); transient refresh failures (5xx/network) are
+ * rethrown as-is so the caller can retry without destroying a valid session.
  *
  * SERVER-ONLY (reads cookies). Import from `shared/api/server`, never from a
  * Client Component.
@@ -62,8 +63,18 @@ export async function serverFetch<T>(
     let tokens;
     try {
       tokens = await refreshOnce(refreshToken);
-    } catch {
-      throw new SessionExpiredError('Token refresh failed');
+    } catch (refreshError) {
+      // Mirror proxy.ts: only a DEFINITIVE auth rejection (400/401/403) means the
+      // session is gone. A transient upstream error (5xx, network blip) must NOT
+      // discard a still-valid refresh token — rethrow it so the caller (Server
+      // Action / RSC) can surface a retryable error instead of logging the user out.
+      const authRejected =
+        refreshError instanceof ApiError &&
+        (refreshError.status === 400 ||
+          refreshError.status === 401 ||
+          refreshError.status === 403);
+      if (authRejected) throw new SessionExpiredError('Token refresh failed');
+      throw refreshError;
     }
 
     // Persist when the context allows cookie writes (Server Actions / Route
