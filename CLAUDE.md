@@ -2,110 +2,105 @@
 
 Guidance for Claude Code (and humans) working in this repository.
 
+## Project rules (loaded into every session)
+
+@AGENTS.md
+@docs/RULES.md
+@docs/ARCHITECTURE.md
+
 ## What this is
 
-A **Next.js 16 (App Router) starter** — React 19 + TypeScript, organized with
-**Feature-Sliced Design (FSD)**, RSC-first. Deliberately lean: extra libraries are
-added only when a feature needs them (see `.claude/stack.md`).
+A **Next.js 16 (App Router) starter** — React 19 + TypeScript strict, organised
+with **Feature-Sliced Design**, RSC-first, with a working JWT auth flow (access +
+refresh in httpOnly cookies, refresh-gate in `proxy.ts`). Deliberately lean:
+libraries are added when a feature needs them, and recorded in `.claude/stack.md`.
 
-## Architecture: FSD on Next.js App Router
+Structure, layers and data flow: `docs/ARCHITECTURE.md`. Constraints:
+`docs/RULES.md`.
 
-Next's file-system router collides with FSD's `app`/`pages` layers, so:
+## Starting a task
 
-- **Next's `app/` lives at the project ROOT** and is a **thin routing shell** —
-  route files only re-export from the FSD layers, no business logic.
-- **FSD layers live in `src/`.** The FSD `pages` layer is **renamed to `views`**
-  to avoid the collision.
+If the session is new, resumed, or the context was compacted — before the first
+code edit:
 
-```
-app/                    # Next App Router (ROUTING ONLY)
-├── layout.tsx          # imports Providers + globals.css from the FSD app layer
-├── page.tsx            # redirect('/login') | '/dashboard' (by session)
-├── globals.css         # Tailwind v4 entry
-├── login/page.tsx      # export { LoginView as default, metadata } from '@/views/login'
-└── dashboard/
-    ├── page.tsx        # export { DashboardView as default, metadata } from '@/views/dashboard'
-    └── error.tsx       # 'use client' error boundary for the dashboard segment
-proxy.ts                # Next 16 middleware (refresh-gate + session routing), at ROOT
-src/
-├── app/                # FSD app layer: providers (QueryClient, Toaster)
-├── views/              # FSD "pages" layer (login, dashboard), renamed
-├── widgets/            # composite UI blocks (products-board)
-├── features/           # user-facing features (auth, cart/add, product/load)
-├── entities/           # business entities (user, product, cart)
-└── shared/             # api (auth transport + refresh + query client), config, ui
-```
+1. Run `ls docs/` — `docs/` is the source of project rules. The `SessionStart`
+   hook prints its contents and marks files that were not there at the previous
+   check. Any new `docs/*.md` is read in full: it may carry rules that are not in
+   this file.
+2. Read `docs/SYSTEM_OVERVIEW.md` — the domain end to end. Then
+   `docs/DECISIONS.md` — what was decided and why, so settled questions are not
+   reopened.
+3. Before building a screen, open `docs/DESIGN.md` — tokens, status chips and the
+   "artboard → screen" table. Mockups live in `docs/design/`; a screen is built
+   from its artboard, not from memory.
+4. Data for mockups, seeds and tests comes from `docs/DEMO_DATA.md` — one
+   fictional world, invent no other.
+5. Find the closest existing analogue in `src/` (view, entity, feature, form,
+   table, modal) and follow its structure, naming and markup. New patterns are not
+   invented — existing ones are reused.
+6. Before creating a component, hook or helper, check whether one exists:
+   `src/shared/ui`, `src/shared/lib`, `src/entities/<x>/ui`, `src/features`.
 
-**Layer rule:** import only from layers **below** (`views → widgets → features →
-entities → shared`). Enforced by `eslint-plugin-boundaries`. The root `app/` sits
-above `views`. Every slice exposes a public API via `index.ts` — no deep imports.
+Other documents, as needed:
 
-**Locality (important):** code used in one place stays there. A component/hook/
-store used by **one view only** lives in `views/<view>/...`, never lifted to
-`app`/`widgets`/`shared`. Promote only when a **second consumer** appears.
+- `docs/design-prompt.md` — the original brief for Claude Design; doubles as the
+  description of expected screen behaviour.
+- `.claude/stack.md` — what is installed and what to reach for.
+- `.claude/skills/*` — FSD skills (`/fsd-architecture`, `/scaffold-fsd-slice`,
+  `/fsd-review`, `/frontend-conventions`, `/fsd-with-nextjs`).
+- `docs/_templates/` — skeletons to promote into `docs/` when this starter becomes
+  a product (`SYSTEM_OVERVIEW`, `DEMO_DATA`, `design-prompt`, `LOAD`, `THREATS`).
 
-## Rendering & data (RSC-first)
+## Session refresh
 
-- **Server Components by default.** Add `'use client'` only at the **leaf** that
-  needs interactivity/hooks — never on a whole layer.
-- **Server reads:** native `fetch` (Next Data Cache via `cache`/`next.revalidate`/
-  `next.tags`) or `apiFetch` from `shared/api`.
-- **Mutations:** Server Actions (set httpOnly cookies via `next/headers`).
-- **Client state from the server:** React Query. Get the client via
-  `getQueryClient()` (`shared/api`) — fresh per request on the server, a singleton
-  in the browser. Prefetch in a view, wrap in `HydrationBoundary`.
-- **No `import.meta.env`** — use `process.env` / the typed `env` from
-  `shared/config` (only `NEXT_PUBLIC_*` reach the client).
+- After `/compact` or a resume, the `@`-included rules reload — the task state
+  does not. Rebuild it from `git status` and `git diff`, not from memory: what is
+  already changed and what is not.
+- The `SessionStart` hook records a baseline of changed files on `startup`/`clear`
+  and prints `docs/`; on `resume`/`compact` it only prints `docs/` — the baseline
+  is kept so the `Stop` hook still reviews everything changed during the task.
+- Do not assume you remember a file's contents: open it before editing.
 
-## Conventions
+## Finishing a task
 
-- **Validation:** `zod` (top-level `z.email()`/`z.url()`).
-- **Typed env:** `shared/config/env.ts` (`@t3-oss/env-nextjs` + zod). Add new vars
-  there; client vars must be `NEXT_PUBLIC_`-prefixed.
-- **Styling:** Tailwind v4, CSS-first. Single `@import 'tailwindcss';` in
-  `app/globals.css`; tokens via `@theme`. No `tailwind.config.js`.
-- **Toasts:** `react-toastify` v11 — `<ToastContainer/>` mounted once in Providers;
-  it injects its own CSS (do NOT import a stylesheet). Show errors with
-  `toast.error(...)` (e.g. in a React Query `onError`).
-- **Routes:** `RoutesPath` (`shared/config`) — `href` for `next/link`,
-  `redirect()`, `router.push()`.
-- **Files:** `.tsx` only with JSX. **TS strict.**
-- **Extra libraries are NOT pre-installed** — add state (`zustand`), forms
-  (`react-hook-form`), dates (`date-fns`), etc. when needed; document in
-  `.claude/stack.md`.
+Before the final answer — self-check: re-read `docs/RULES.md` and compare every
+changed file against it; confirm project patterns were used rather than invented
+ones, and that existing components and utilities were reused; `pnpm typecheck`,
+`pnpm lint` and `pnpm test` green. No placeholder comments, no `TODO` without a
+task behind it. The `Stop`/`SubagentStop` hook
+(`.claude/hooks/check-rules.sh`) enforces this automatically and runs eslint on
+the changed files plus a typecheck — its checklist message is expected, work
+through it before writing the final answer.
 
 ## Commands
 
 ```bash
 pnpm dev          # next dev (Turbopack)  → http://localhost:3000
-pnpm build        # next build (Turbopack, default in Next 16)
+pnpm build        # next build
 pnpm start        # serve the production build
 pnpm typecheck    # tsc --noEmit
 pnpm lint         # eslint . (next + FSD boundaries)
 pnpm format       # prettier --write .
 pnpm test         # vitest run (unit/component)
-pnpm test:e2e     # playwright test (run `pnpm exec playwright install` first)
+pnpm test:e2e     # playwright (run `pnpm exec playwright install` once)
 ```
 
 Git hooks via **Lefthook** (`lefthook.yml`): pre-commit runs eslint+prettier on
-staged files; commit-msg runs commitlint. Commits follow **Conventional Commits**;
-optional scope must be an FSD layer/area (see `commitlint.config.js`).
-
-## Skills
-
-Project skills in `.claude/skills/` (auto-discovered; invoke with `/<name>`):
-`fsd-architecture`, `scaffold-fsd-slice`, `fsd-review`, `frontend-conventions`,
-`fsd-with-nextjs`.
+staged files, commit-msg runs commitlint. **Conventional Commits**; an optional
+scope must name an FSD layer/area (`commitlint.config.js`).
 
 ## Pitfalls
 
 - Never create a module-scope `QueryClient` (or a server-shared store) — use
   `getQueryClient()` per request.
-- RSC must not import client-only code (`react-toastify`, a zustand store, hook
-  libraries). Mark `'use client'` on the consumer.
-- Route `params`/`searchParams` are async in Next 15 — `await` them in the route,
-  pass plain props into the view.
+- An RSC must not import client-only code (`react-toastify`, a zustand store, hook
+  libraries). Mark `'use client'` on the consumer leaf.
+- Route `params`/`searchParams` are async — `await` them in the route, pass plain
+  props into the view.
+- Middleware in Next 16 is the root file `proxy.ts` (Node runtime) exporting
+  `proxy(request)` — not `middleware.ts`. Its `config.matcher` takes static string
+  literals only.
 - React Compiler runs via Babel (top-level `reactCompiler` in `next.config.ts`) —
   slightly slower builds, by design.
-- Middleware in Next 16 is the file `proxy.ts` (Node runtime), exporting
-  `proxy(request)` — not `middleware.ts`.
+- Fonts are self-hosted (`next/font/local`); `next/font/google` breaks an offline
+  build (RULES §12).

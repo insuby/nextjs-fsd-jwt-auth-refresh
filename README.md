@@ -103,6 +103,32 @@ Import rule: a layer imports only from layers **below** it (enforced by
 `eslint-plugin-boundaries`); slices expose a public API via `index.ts`. See
 [`.claude/skills/fsd-with-nextjs`](./.claude/skills/fsd-with-nextjs/SKILL.md).
 
+## Project rules (and how agents follow them)
+
+Rules live in `docs/`, not in prose scattered across `CLAUDE.md`:
+
+| File                   | What it holds                                             |
+| ---------------------- | --------------------------------------------------------- |
+| `docs/RULES.md`        | Binding constraints, numbered so tooling can cite them    |
+| `docs/ARCHITECTURE.md` | Zones, FSD layers, rendering/data, auth, testing          |
+| `docs/DECISIONS.md`    | Decision log — what was decided and **why**, newest first |
+| `docs/DESIGN.md`       | Design tokens, status chips, artboard → screen mapping    |
+| `docs/_templates/`     | Skeletons to promote into `docs/` for a real product      |
+| `AGENTS.md`            | Binding guide for coding agents (Claude Code, Codex, …)   |
+
+[`CLAUDE.md`](./CLAUDE.md) pulls `AGENTS.md`, `RULES.md` and `ARCHITECTURE.md` in
+via `@`-includes, so they reload on every session and after every compaction.
+
+`.claude/hooks/check-rules.sh` closes the loop. At session start it records which
+files were already dirty, so later checks only cover what the agent itself
+changed; it prints `docs/` and flags documents that appeared since last time. On
+`Stop` it runs ESLint over the changed files plus a full typecheck, and blocks
+completion until a self-check against `RULES.md` has been done. It needs
+[`jq`](https://jqlang.github.io/jq/); without it the hook disables itself rather
+than failing the session.
+
+To opt out, delete `.claude/settings.json`.
+
 ## Commits
 
 [Conventional Commits](https://www.conventionalcommits.org/) (commitlint); an
