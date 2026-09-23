@@ -29,12 +29,10 @@ export type RefreshState = {
  * Either way there is NO module-global, so nothing leaks across requests/sessions
  * — the same rule the repo enforces for `getQueryClient()`.
  */
-export const getRefreshState = cache(
-  (): RefreshState => ({
-    inflight: null,
-    tokens: null,
-  }),
-);
+export const getRefreshState = cache((): RefreshState => ({
+  inflight: null,
+  tokens: null,
+}));
 
 /**
  * Core single-flight, decoupled from React's `cache()` so it's unit-testable.
