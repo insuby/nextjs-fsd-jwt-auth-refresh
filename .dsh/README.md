@@ -47,6 +47,17 @@ These are DSH differences, not preferences:
 `jq` is required, exactly as in the `.claude` hook; without it the hook disables
 itself.
 
+### The Node runtime the checks need
+
+DSH starts the app with `PATH=/usr/bin:/bin:/usr/sbin:/sbin`, where a Node runtime
+usually is not present — and `eslint`/`tsc` are `#!/usr/bin/env node` shims. The
+adapter therefore prepends the first standard location that has Node
+(`/opt/homebrew/bin`, `/usr/local/bin`, the newest `~/.nvm/versions/node/*/bin`).
+When none is found, the shared checks report
+`skipped (no node runtime in PATH)` instead of a lint failure — link Node into one
+of those paths (or launch the app from a shell that has it) to get the checks back.
+The `.claude` hook reports the same `skipped` status when run without Node.
+
 ## Mounting it in a DSH profile
 
 The hook config path is **process-level** — the bridge reads one file at startup —

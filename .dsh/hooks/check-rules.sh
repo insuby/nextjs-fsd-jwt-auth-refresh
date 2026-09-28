@@ -55,6 +55,29 @@ export CLAUDE_PROJECT_DIR="$project_dir"
 
 checks_script="$project_dir/.claude/hooks/check-rules.sh"
 
+# DSH starts the app with PATH=/usr/bin:/bin:/usr/sbin:/sbin, where a Node runtime
+# usually is not present — and eslint/tsc are `#!/usr/bin/env node` shims. Prepend
+# the first standard location that has Node; when there is none the shared checks
+# report `skipped (no node runtime in PATH)` instead of a bogus lint failure.
+ensure_node() {
+  command -v node >/dev/null 2>&1 && return 0
+  local dir candidate
+  for dir in /opt/homebrew/bin /usr/local/bin; do
+    if [ -x "$dir/node" ]; then
+      PATH="$dir:$PATH"
+      export PATH
+      return 0
+    fi
+  done
+  candidate="$(ls -1d "$HOME"/.nvm/versions/node/*/bin 2>/dev/null | sort -V | tail -1)"
+  if [ -n "$candidate" ] && [ -x "$candidate/node" ]; then
+    PATH="$candidate:$PATH"
+    export PATH
+  fi
+  return 0
+}
+ensure_node
+
 event="$(field .hook_event_name)"
 [ -n "$event" ] || event=SessionStart
 session_id="$(field .session_id)"

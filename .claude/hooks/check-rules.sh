@@ -64,6 +64,12 @@ resolve_bin() {
   fi
 }
 
+# eslint/tsc are shims that run through `#!/usr/bin/env node`. Without a Node runtime
+# in PATH the check would read as a lint failure instead of a missing tool — DSH, for
+# one, starts the app with PATH=/usr/bin:/bin:/usr/sbin:/sbin, where Node is absent.
+node_available=true
+command -v node >/dev/null 2>&1 || node_available=false
+
 # ---------------------------------------------------------------------------
 # docs/ is the source of project rules. Print the list and flag files that were
 # not there last time: those must be read before the first edit. Templates under
@@ -145,6 +151,8 @@ lint_rc=0
 eslint_bin="$(resolve_bin eslint)"
 if [ -z "$lint_files" ]; then
   lint_status="eslint: - (no changed .ts/.tsx)"
+elif [ "$node_available" != true ]; then
+  lint_status="eslint: skipped (no node runtime in PATH)"
 elif [ -n "$eslint_bin" ]; then
   lint_out="$(printf '%s\n' "$lint_files" | tr '\n' '\0' |
     xargs -0 $eslint_bin --max-warnings 0 --report-unused-disable-directives 2>&1)"
@@ -160,7 +168,9 @@ fi
 tc_status="typecheck: skipped (no tsc binary / tsconfig.json)"
 tc_rc=0
 tsc_bin="$(resolve_bin tsc)"
-if [ -n "$tsc_bin" ] && [ -f tsconfig.json ]; then
+if [ -n "$tsc_bin" ] && [ -f tsconfig.json ] && [ "$node_available" != true ]; then
+  tc_status="typecheck: skipped (no node runtime in PATH)"
+elif [ -n "$tsc_bin" ] && [ -f tsconfig.json ]; then
   tc_out="$($tsc_bin -p tsconfig.json --noEmit --pretty false 2>&1)"
   tc_rc=$?
   if [ $tc_rc -ne 0 ]; then
