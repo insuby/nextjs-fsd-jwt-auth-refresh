@@ -94,3 +94,10 @@ The link is committed; if a checkout loses it, re-create it with:
 ```bash
 bash ~/.dsh/bin/link-claude-skills.sh .
 ```
+
+## Machine-level layer
+
+`.dsh/global/` versions what normally sits in `$DSH_HOME`: the event router that
+dispatches a hook event to the current project, the bridge config and the skills
+linker. See [`.dsh/global/README.md`](global/README.md); `bash .dsh/global/install.sh`
+installs it and prints the profile patch block.

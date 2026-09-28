@@ -69,8 +69,10 @@ Exact versions live in `package.json`; this file records **what to use and why**
 - `.claude/skills/*` — FSD skills.
 - `.dsh/` — the DeepSeek Harness counterpart: `.dsh/hooks/hooks.json` (mounted in
   a DSH profile), `.dsh/hooks/check-rules.sh` (DSH protocol adapter around
-  `.claude/hooks/check-rules.sh`) and `.dsh/skills` → `.claude/skills`. See
-  `.dsh/README.md` and `docs/DECISIONS.md`.
+  `.claude/hooks/check-rules.sh`) and `.dsh/skills` → `.claude/skills`.
+  `.dsh/global/` holds the machine-level layer that lives in `$DSH_HOME` (event
+  router, bridge config, skills linker) and installs with
+  `bash .dsh/global/install.sh`. See `.dsh/README.md` and `docs/DECISIONS.md`.
 
 ## Add when you need it (NOT pre-installed)
 

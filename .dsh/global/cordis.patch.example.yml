@@ -1,0 +1,8 @@
+# Фрагмент для $DSH_HOME/profiles/<профиль>/cordis.patch.yml.
+# Путь к claude-hooks.json подставь свой — install.sh печатает готовый вариант.
+- insert:
+    - id: hooks-claude-code
+      name: '@deepseek-ai/dsh-hooks-claude-code'
+      config:
+        configPath: /Users/you/.dsh/hooks/claude-hooks.json
+        defaultTimeoutMs: 300000

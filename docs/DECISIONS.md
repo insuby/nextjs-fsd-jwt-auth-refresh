@@ -5,6 +5,28 @@ your mind? Do not edit the old entry — add a new one that references it.
 
 ---
 
+## 2026-09-28 · The DSH global layer is versioned under `.dsh/global/`
+
+The bridge between DSH and the project hooks lives in `$DSH_HOME` (`~/.dsh`), which
+no repository tracked: a new machine meant rebuilding the router, the hook config
+and the skills linker by hand — and when one of them is wrong the failure is
+silent. That is exactly how the hook plugin stayed unmounted: the profile patch
+carried the row without an `insert:` list, so DSH warned and mounted nothing.
+
+**Decision:** `.dsh/global/` holds that layer, with `install.sh`.
+
+1. The copies are portable: the router derives `$DSH_HOOKS_DIR` from its own
+   location instead of a hard-coded home path.
+2. `hooks/claude-hooks.json` is a template — the installer fills in
+   `__DSH_HOOKS_DIR__`, because the bridge substitutes only
+   `${CLAUDE_PROJECT_DIR}` and `${CLAUDE_PLUGIN_ROOT}` in command strings.
+3. `install.sh` copies into `$DSH_HOME`, backs up whatever it replaces and
+   **prints** the profile patch block rather than editing it: the bridge config
+   path is process-level, and a broken profile patch stops the app from starting.
+4. The installer is idempotent, so re-running it is how the layer is updated.
+
+---
+
 ## 2026-09-28 · DSH parity: `.dsh/` hooks, skills, and explicit reading of the `@`-includes
 
 The repository is worked on from DeepSeek Harness as well as Claude Code, and the

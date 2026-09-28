@@ -132,7 +132,9 @@ To opt out, delete `.claude/settings.json`.
 DeepSeek Harness runs the same checks through [`.dsh/`](./.dsh/README.md): it does
 not expand `@`-includes and cannot rely on `stop_hook_active`, so `.dsh/hooks/`
 carries a small adapter around `.claude/hooks/check-rules.sh` and `.dsh/skills` is
-a symlink to `.claude/skills`.
+a symlink to `.claude/skills`. The machine-level part of that setup — the event
+router, the bridge config, the skills linker — is versioned in
+[`.dsh/global/`](./.dsh/global/README.md) with an installer.
 
 ## Commits
 
