@@ -27,6 +27,7 @@ browser ──► Next server (RSC render, Server Actions, proxy.ts) ──► u
 | `e2e/`     | Playwright specs                                                  |
 | `public/`  | Static assets (self-hosted; see RULES §12)                        |
 | `.claude/` | Agent configuration: hooks, skills, stack inventory               |
+| `.dsh/`    | The same for DeepSeek Harness: hook adapter, hook config, skills  |
 | `docs/`    | Project rules and documentation — the source of truth             |
 
 A product built on this starter usually grows a fourth zone — its own API. When

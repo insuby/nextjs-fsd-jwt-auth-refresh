@@ -5,6 +5,41 @@ your mind? Do not edit the old entry — add a new one that references it.
 
 ---
 
+## 2026-09-28 · DSH parity: `.dsh/` hooks, skills, and explicit reading of the `@`-includes
+
+The repository is worked on from DeepSeek Harness as well as Claude Code, and the
+two do not read agent configuration the same way. DSH loads `AGENTS.md` and
+`CLAUDE.md`, but it does **not** expand the `@`-includes of `CLAUDE.md`, it reads
+session context only from `hookSpecificOutput.additionalContext` (plain stdout is
+dropped), it always reports `stop_hook_active: false`, and it treats `SubagentStop`
+as observe-only. Mounting the `.claude` hook as-is therefore loses the `docs/`
+listing, and — worse — the blocking `Stop` hook can never let a turn end, because
+the field it uses to tell a first stop from a self-check stop never becomes `true`.
+
+**Decision:** `.dsh/` mirrors `.claude/` and reuses it instead of duplicating it.
+
+1. `.dsh/hooks/check-rules.sh` adapts the protocol: it wraps the session-start
+   listing in `additionalContext`, announces the files named by `@`-includes, keeps
+   the stop-loop state itself (emulating `stop_hook_active`), and delegates the
+   checks to `.claude/hooks/check-rules.sh` — one implementation of the checks, two
+   dialect adapters.
+2. `.dsh/hooks/hooks.json` wires `SessionStart`, `UserPromptSubmit` (clears the
+   loop state on a real human message, because the bridge re-submits a blocking
+   reason as a prompt) and `Stop`. `SubagentStart`/`SubagentStop` are omitted: DSH
+   cannot block a subagent, so a child baseline would never be read.
+3. `.dsh/skills` is a symlink to `.claude/skills`; DSH discovers
+   `<project>/.dsh/skills` natively, so the FSD skills stay a single copy.
+4. `AGENTS.md` records that the `@`-included rules must be read explicitly, since
+   nothing expands them on DSH.
+
+Mounting is documented in `.dsh/README.md`. Two constraints matter there: the hook
+config path is **process-level** (one file per DSH process), so a profile points at
+this project or at a router that dispatches per project; and a new plugin row must
+sit inside an `insert:` list, because a bare row with an unknown `id` is reported
+as a warning and never mounted.
+
+---
+
 ## 2026-09-23 · Agent rules: `docs/` + hooks instead of prose in `CLAUDE.md`
 
 `CLAUDE.md` alone does not survive a long session: after `/compact` the rules are

@@ -67,6 +67,10 @@ Exact versions live in `package.json`; this file records **what to use and why**
   `docs/` listing with new-file flags, and a blocking self-check on `Stop`.
   Requires **`jq`**; without it the hook disables itself.
 - `.claude/skills/*` — FSD skills.
+- `.dsh/` — the DeepSeek Harness counterpart: `.dsh/hooks/hooks.json` (mounted in
+  a DSH profile), `.dsh/hooks/check-rules.sh` (DSH protocol adapter around
+  `.claude/hooks/check-rules.sh`) and `.dsh/skills` → `.claude/skills`. See
+  `.dsh/README.md` and `docs/DECISIONS.md`.
 
 ## Add when you need it (NOT pre-installed)
 

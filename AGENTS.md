@@ -9,6 +9,27 @@ The agent must:
 
 If a solution violates `RULES.md`, the agent must rework the approach.
 
+## DeepSeek Harness (DSH)
+
+DSH loads `AGENTS.md` and `CLAUDE.md` from the repository root down to the working
+directory, but it does **not** expand the `@path` includes of `CLAUDE.md` — they
+arrive as plain text. The rules they name are still binding, so read them
+explicitly before the first edit: `docs/RULES.md`, `docs/ARCHITECTURE.md`.
+
+`.dsh/` is the DSH counterpart of `.claude/` (mapping and mounting:
+`.dsh/README.md`):
+
+- `.dsh/hooks/check-rules.sh` — the session-start `docs/` listing and the blocking
+  `Stop` self-check, adapted to the DSH hook protocol. DSH always reports
+  `stop_hook_active: false`, so the adapter tracks the stop-loop state itself and
+  the checks themselves stay in `.claude/hooks/check-rules.sh`.
+- `.dsh/hooks/hooks.json` — the hook config mounted in a DSH profile.
+- `.dsh/skills` → `.claude/skills` — the FSD skills, discovered by DSH natively.
+
+A `Stop` hook that blocks the turn is expected, not an error: work through the
+checklist it prints and stop again. `SubagentStop` is observe-only in DSH, so
+subagents are not gated by the self-check.
+
 # Agent guide
 
 This document defines the binding rules for automated agents (Claude Code, Codex
